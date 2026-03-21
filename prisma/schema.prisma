@@ -1,13 +1,64 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// =======================
+// DATASOURCE && GENERATOR
+// =======================
 
 generator client {
   provider = "prisma-client"
-  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+// =======================
+// ENUMS
+// =======================
+
+enum ProjectType {
+  SINGLE
+  EP
+  ALBUM
+}
+
+// =======================
+// MODELS
+// =======================
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  projects     Project[]
+
+  @@map("users")
+}
+
+model Project {
+  id          String      @id @default(uuid())
+  name        String
+  description String?
+  type        ProjectType
+
+  coverImageUrl String?
+  coverImageKey String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  tracks Track[]
+
+  // Auditoría
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String?
+
+  // Soft delete
+  deletedAt DateTime?
+
+  @@index([userId])
+  @@index([userId, deletedAt])
+  @@map("projects")
 }
