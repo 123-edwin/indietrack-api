@@ -3,7 +3,7 @@
 // =======================
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -25,12 +25,13 @@ enum ProjectType {
 // =======================
 
 model User {
-  id           String    @id @default(uuid())
-  email        String    @unique
-  passwordHash String
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  projects     Project[]
+  id            String         @id @default(uuid())
+  email         String         @unique
+  passwordHash  String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  projects      Project[]
+  collaborators Collaborator[]
 
   @@map("users")
 }
@@ -49,16 +50,64 @@ model Project {
 
   tracks Track[]
 
-  // Auditoría
+  // audit
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   createdBy String
   updatedBy String?
 
-  // Soft delete
+  // soft delete
   deletedAt DateTime?
 
   @@index([userId])
   @@index([userId, deletedAt])
   @@map("projects")
+}
+
+model Track {
+  id         String  @id @default(uuid())
+  title      String
+  bpm        Int?
+  musicalKey String?
+  duration   Int?
+
+  audioUrl String?
+  audioKey String?
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  collaborators Collaborator[]
+
+  // audit
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+  updatedBy String?
+
+  // soft delete
+  deletedAt DateTime?
+
+  @@index([projectId])
+  @@index([projectId, deletedAt])
+  @@map("tracks")
+}
+
+model Collaborator {
+  id   String @id @default(uuid())
+  name String
+  role String
+
+  trackId String
+  track   Track  @relation(fields: [trackId], references: [id])
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([trackId])
+  @@index([userId])
+  @@map("collaborators")
 }
